@@ -1,0 +1,4 @@
+include ':app',
+        ':apt-annotation',
+        ':apt-api',
+        ':apt-compiler'
