@@ -21,10 +21,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         PageRouter
-                .of(this)
-                .path("test")
-                .setParams(new TestActivityBundle.Builder().setMsg("ssss").bundle())
-                .setUri(Uri.parse(""))
-                .navigation();
+            .of(this)
+            .path("test")
+            .setParams(new TestActivityBundle.Builder().setMsg("ssss").bundle())
+            .setUri(Uri.parse(""))
+            .navigation();
     }
 }
