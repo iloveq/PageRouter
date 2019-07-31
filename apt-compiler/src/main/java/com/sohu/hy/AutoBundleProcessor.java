@@ -1,6 +1,6 @@
 package com.sohu.hy;
 
-import com.sohu.hy.annotation.AutoBundle;
+import com.sohu.hy.annotation.Args;
 import com.sohu.hy.model.AutoBundleInfo;
 import com.sohu.hy.utils.Constants;
 import com.sohu.hy.utils.Logger;
@@ -52,7 +52,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnv) {
-        Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(AutoBundle.class);
+        Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(Args.class);
         if (elements.isEmpty()) return false;
         try {
             prepare(elements);
@@ -97,7 +97,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
             List<AutoBundleInfo> autoBundleInfos = new ArrayList<>();
 
             for (Element element : fields) {
-                AutoBundle fieldConfig = element.getAnnotation(AutoBundle.class);
+                Args fieldConfig = element.getAnnotation(Args.class);
                 String fieldName = element.getSimpleName().toString();
                 AutoBundleInfo info = new AutoBundleInfo();
                 info.fieldName = fieldName;
@@ -139,7 +139,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
                     .append("\n");
 
             builder.append("\n");
-            builder.append("public final class ").append(className).append("AutoBundle {\n" +
+            builder.append("public final class ").append(className).append("Bundle {\n" +
                     "\n");
             builder.append("\n");
 
@@ -160,7 +160,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
 
             for (AutoBundleInfo info : autoBundleInfos) {
 
-                builder.append("        public ").append(className).append("AutoBundle.Builder ")
+                builder.append("        public ").append(className).append("Bundle.Builder ")
                         .append(info.fieldMethodName)
                         .append("(").append(info.fieldTypeName).append(" ").append(info.fieldName).append("){")
                         .append("\n")
@@ -217,7 +217,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
 
             try {
                 JavaFileObject source = filer.createSourceFile(Constants.PACKAGE_NAME
-                        + "." + className+"AutoBundle");
+                        + "." + className+"Bundle");
                 Writer writer = source.openWriter();
                 writer.write(builder.toString());
                 writer.flush();
@@ -233,7 +233,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Collections.singleton(AutoBundle.class.getCanonicalName());
+        return Collections.singleton(Args.class.getCanonicalName());
     }
 
     @Override

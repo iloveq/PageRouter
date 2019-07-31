@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.CLASS)
-public @interface AutoBundle {
+public @interface Args {
     boolean required() default false;
     String key() default "";
 }
