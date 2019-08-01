@@ -1,6 +1,6 @@
 package com.sohu.hy.model;
 
-public class AutoBundleInfo {
+public class BundleInfo {
 
     public int fieldType;
     public String fieldTypeName;

@@ -1,7 +1,7 @@
 package com.sohu.hy;
 
 import com.sohu.hy.annotation.Args;
-import com.sohu.hy.model.AutoBundleInfo;
+import com.sohu.hy.model.BundleInfo;
 import com.sohu.hy.utils.Constants;
 import com.sohu.hy.utils.Logger;
 import com.sohu.hy.utils.StringUtils;
@@ -30,7 +30,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 
-public class AutoBundleProcessor extends AbstractProcessor {
+public class BundleParserProcessor extends AbstractProcessor {
 
     private Logger logger;
     private Filer filer;
@@ -94,18 +94,18 @@ public class AutoBundleProcessor extends AbstractProcessor {
             String classPath = packageElement.getQualifiedName().toString() + "." + className;
 
             List<Element> fields = entry.getValue();
-            List<AutoBundleInfo> autoBundleInfos = new ArrayList<>();
+            List<BundleInfo> bundleInfos = new ArrayList<>();
 
             for (Element element : fields) {
                 Args fieldConfig = element.getAnnotation(Args.class);
                 String fieldName = element.getSimpleName().toString();
-                AutoBundleInfo info = new AutoBundleInfo();
+                BundleInfo info = new BundleInfo();
                 info.fieldName = fieldName;
                 info.fieldTypeName = typeUtils.getTypeName(element);
                 info.fieldMethodName = "set"+StringUtils.toUpperCaseFirstOne(fieldName);
                 info.fieldType = typeUtils.typeExchange(element);
                 info.fieldImportName = typeUtils.getTypeImportName(element);
-                autoBundleInfos.add(info);
+                bundleInfos.add(info);
             }
 
             StringBuilder builder = new StringBuilder();
@@ -126,7 +126,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
             builder.append("\n");
             builder.append("import android.content.Intent;");
             builder.append("\n");
-            for (AutoBundleInfo info : autoBundleInfos) {
+            for (BundleInfo info : bundleInfos) {
                 if (info.fieldImportName.isEmpty())continue;
                 builder.append("import ")
                         .append(info.fieldImportName)
@@ -158,7 +158,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
                     "        }\n").append("\n");
 
 
-            for (AutoBundleInfo info : autoBundleInfos) {
+            for (BundleInfo info : bundleInfos) {
 
                 builder.append("        public ").append(className).append("Bundle.Builder ")
                         .append(info.fieldMethodName)
@@ -166,7 +166,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
                         .append("\n")
 
                         .append("            ")
-                        .append(buildPutStatement(info.fieldType,"\""+info.fieldName+"\"",info.fieldName))
+                        .append(buildPutDoc(info.fieldType,"\""+info.fieldName+"\"",info.fieldName))
 
                         .append("\n")
                         .append("            return this;\n" +
@@ -187,7 +187,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
 
             /*********************** bind-fun **********************/
 
-            for (AutoBundleInfo info : autoBundleInfos) {
+            for (BundleInfo info : bundleInfos) {
                 builder.append("    public static void bind(").append(className).append(" target) {\n" +
                         "        Intent intent = target.getIntent();\n" +
                         "        if (intent==null)return;\n" +
@@ -197,7 +197,7 @@ public class AutoBundleProcessor extends AbstractProcessor {
                         .append("       if (source.containsKey(\"").append(info.fieldName).append("\")) {\n" +
                                 "            target.").append(info.fieldName)
                         .append(" = (").append(info.fieldTypeName)
-                        .append(buildGetStatement(info.fieldType,info.fieldName))
+                        .append(buildGetDoc(info.fieldType,info.fieldName))
 
                         .append("\n" +
                                 "        } else {\n" +
@@ -241,86 +241,86 @@ public class AutoBundleProcessor extends AbstractProcessor {
         return SourceVersion.latestSupported();
     }
 
-    private String buildGetStatement(int type,String originalValue){
-        String statement = "";
+    private String buildGetDoc(int type, String originalValue){
+        String doc = "";
         switch (TypeUtils.TypeKind.values()[type]) {
             case BOOLEAN:
-                statement = ") source.getBoolean(" + "\"" + originalValue + "\");";
+                doc = ") source.getBoolean(" + "\"" + originalValue + "\");";
                 break;
             case BYTE:
-                statement = ") source.getByte(" + "\"" + originalValue + "\");";
+                doc = ") source.getByte(" + "\"" + originalValue + "\");";
                 break;
             case SHORT:
-                statement = ") source.getShort(" + "\"" + originalValue + "\");";
+                doc = ") source.getShort(" + "\"" + originalValue + "\");";
                 break;
             case INT:
-                statement = ") source.getInt(" + "\"" + originalValue + "\");";
+                doc = ") source.getInt(" + "\"" + originalValue + "\");";
                 break;
             case LONG:
-                statement = ") source.getLong(" + "\"" + originalValue + "\");";
+                doc = ") source.getLong(" + "\"" + originalValue + "\");";
                 break;
             case CHAR:
-                statement = ") source.getChar(" + "\"" + originalValue + "\");";
+                doc = ") source.getChar(" + "\"" + originalValue + "\");";
                 break;
             case FLOAT:
-                statement = ") source.getFloat(" + "\"" + originalValue + "\");";
+                doc = ") source.getFloat(" + "\"" + originalValue + "\");";
                 break;
             case DOUBLE:
-                statement = ") source.getDouble(" + "\"" + originalValue + "\");";
+                doc = ") source.getDouble(" + "\"" + originalValue + "\");";
                 break;
             case STRING:
-                statement = ") source.getString(" + "\"" + originalValue + "\");";
+                doc = ") source.getString(" + "\"" + originalValue + "\");";
                 break;
             case SERIALIZABLE:
-                statement = ") source.getSerializable(" + "\"" + originalValue + "\");";
+                doc = ") source.getSerializable(" + "\"" + originalValue + "\");";
                 break;
             case PARCELABLE:
-                statement = ") source.getParcelable(" + "\"" + originalValue + "\");";
+                doc = ") source.getParcelable(" + "\"" + originalValue + "\");";
                 break;
         }
 
-        return statement;
+        return doc;
     }
 
-    private String buildPutStatement(int type,String originalKey,String originalValue){
-        String statement = "";
+    private String buildPutDoc(int type, String originalKey, String originalValue){
+        String doc = "";
         switch (TypeUtils.TypeKind.values()[type]) {
             case BOOLEAN:
-                statement = "args.putBoolean(" + originalKey+ "," + originalValue +");";
+                doc = "args.putBoolean(" + originalKey+ "," + originalValue +");";
                 break;
             case BYTE:
-                statement = "args.putByte("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putByte("+ originalKey+ "," + originalValue + ");";
                 break;
             case SHORT:
-                statement = "args.putShort("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putShort("+ originalKey+ "," + originalValue + ");";
                 break;
             case INT:
-                statement = "args.putInt("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putInt("+ originalKey+ "," + originalValue + ");";
                 break;
             case LONG:
-                statement = "args.putLong("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putLong("+ originalKey+ "," + originalValue + ");";
                 break;
             case CHAR:
-                statement = "args.putChar("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putChar("+ originalKey+ "," + originalValue + ");";
                 break;
             case FLOAT:
-                statement = "args.putFloat("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putFloat("+ originalKey+ "," + originalValue + ");";
                 break;
             case DOUBLE:
-                statement = "args.putDouble("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putDouble("+ originalKey+ "," + originalValue + ");";
                 break;
             case STRING:
-                statement = "args.putString("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putString("+ originalKey+ "," + originalValue + ");";
                 break;
             case SERIALIZABLE:
-                statement = "args.putSerializable("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putSerializable("+ originalKey+ "," + originalValue + ");";
                 break;
             case PARCELABLE:
-                statement = "args.putParcelable("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putParcelable("+ originalKey+ "," + originalValue + ");";
                 break;
         }
 
-        return statement;
+        return doc;
     }
 
 

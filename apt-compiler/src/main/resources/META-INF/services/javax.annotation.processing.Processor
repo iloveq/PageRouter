@@ -1,2 +1,2 @@
 com.sohu.hy.RouterDispatcherProcessor
-com.sohu.hy.AutoBundleProcessor
+com.sohu.hy.BundleParserProcessor
