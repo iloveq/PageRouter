@@ -8,11 +8,19 @@ import android.os.Parcelable;
  */
 public class ParcelableBean implements Parcelable {
 
+    public String type;
+
+    public ParcelableBean(String type){
+        this.type = type;
+    }
+
     protected ParcelableBean(Parcel in) {
+        type = in.readString();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(type);
     }
 
     @Override

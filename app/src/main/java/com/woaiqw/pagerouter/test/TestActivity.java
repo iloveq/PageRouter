@@ -1,18 +1,22 @@
-package com.woaiqw.pagerouter;
+package com.woaiqw.pagerouter.test;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sohu.hy.annotation.Args;
 import com.sohu.hy.annotation.Route;
 import com.sohu.hy.api.BundleService;
+import com.woaiqw.pagerouter.R;
 import com.woaiqw.pagerouter.bean.ParcelableBean;
 import com.woaiqw.pagerouter.bean.SerializableBean;
 
 import java.util.ArrayList;
-import java.util.List;
+
 
 /**
  * Created by haoran on 2019/7/31.
@@ -24,16 +28,16 @@ public class TestActivity extends AppCompatActivity {
     public String msg;
 
     @Args
-    public Character character;
+    public Character name;
 
     @Args
-    public double aDouble;
+    public double money;
 
     @Args
-    public SerializableBean serializableBean;
+    public SerializableBean beanS;
 
     @Args
-    public ParcelableBean parcelableBean;
+    public ParcelableBean beanP;
 
 //    @Args
 //    public NormalBean normalBean;
@@ -43,9 +47,6 @@ public class TestActivity extends AppCompatActivity {
 
     @Args
     public Bitmap bm;
-
-    @Args
-    public ArrayList<SerializableBean> serializableBeanArrayList;
 
     @Args
     public ArrayList<String> stringArrayList;
@@ -58,7 +59,31 @@ public class TestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
         BundleService.bind(this);
+
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+
+        TextView tv = findViewById(R.id.tv);
+        ImageView iv = findViewById(R.id.iv);
+
+        String content = "name:"+name
+                +"\n"
+                +"money:"+money
+                +"\n"
+                +"serializable:"
+                +"\n"
+                +beanS.type
+                +"\n"
+                +"parcelable:"
+                +"\n"
+                +beanP.type
+                +"\n"
+                + "stringArrayList:"+ stringArrayList.toString()
+                +"\n"
+                +"integerArrayList:"+integerArrayList.toString();
+
+        tv.setText(content);
+
+        iv.setImageBitmap(bm);
 
     }
 }
