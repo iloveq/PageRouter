@@ -32,6 +32,8 @@ use
         .navigation();
 
 ```
+不设计成 setParams("key","value") 就是为了能明确看见进入的 Activity 传入哪些参数
+
 
 test page
 
