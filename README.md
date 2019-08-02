@@ -3,14 +3,6 @@ android 页面路由
 
 ```
 目前只支持 单 module
-不支持没有实现 Parcelable or Serializable 的普通对象
-//@Args
-//public NormalBean normalBean;
-field 必须写为 ArrayList
-//@Args
-//public List<String> stringList;
-@Args
-public List<String> stringList;
 
 ```
 类型声明错误会提示
@@ -53,6 +45,18 @@ public class TestActivity extends AppCompatActivity {
 
     }
 }
+
+```
+注意声明的类型
+```
+不支持没有实现 Parcelable or Serializable 的普通对象
+//@Args
+//public NormalBean normalBean;
+field 前的类型必须写为 ArrayList
+//@Args
+//public List<String> stringList;
+@Args
+public ArrayList<String> stringList;
 
 ```
 
