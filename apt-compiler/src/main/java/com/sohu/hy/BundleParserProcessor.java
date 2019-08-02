@@ -7,9 +7,6 @@ import com.sohu.hy.utils.Logger;
 import com.sohu.hy.utils.StringUtils;
 import com.sohu.hy.utils.TypeUtils;
 
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -28,6 +25,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
 public class BundleParserProcessor extends AbstractProcessor {
@@ -86,7 +85,7 @@ public class BundleParserProcessor extends AbstractProcessor {
     private void generateJavaFile() {
         if (objectAndFields.isEmpty()) return;
 
-        for (Map.Entry<TypeElement, List<Element>> entry : objectAndFields.entrySet()){
+        for (Map.Entry<TypeElement, List<Element>> entry : objectAndFields.entrySet()) {
             TypeElement object = entry.getKey();
 
             PackageElement packageElement = (PackageElement) object.getEnclosingElement();
@@ -102,7 +101,7 @@ public class BundleParserProcessor extends AbstractProcessor {
                 BundleInfo info = new BundleInfo();
                 info.fieldName = fieldName;
                 info.fieldTypeName = typeUtils.getTypeName(element);
-                info.fieldMethodName = "set"+StringUtils.toUpperCaseFirstOne(fieldName);
+                info.fieldMethodName = "set" + StringUtils.toUpperCaseFirstOne(fieldName);
                 info.fieldType = typeUtils.typeExchange(element);
                 info.fieldImportName = typeUtils.getTypeImportName(element);
                 bundleInfos.add(info);
@@ -126,13 +125,7 @@ public class BundleParserProcessor extends AbstractProcessor {
             builder.append("\n");
             builder.append("import android.content.Intent;");
             builder.append("\n");
-            for (BundleInfo info : bundleInfos) {
-                if (info.fieldImportName.isEmpty())continue;
-                builder.append("import ")
-                        .append(info.fieldImportName)
-                        .append(";")
-                        .append("\n");
-            }
+
             builder.append("import ")
                     .append(classPath)
                     .append(";")
@@ -144,9 +137,7 @@ public class BundleParserProcessor extends AbstractProcessor {
             builder.append("\n");
 
 
-
             /********************** builder ***********************/
-
 
 
             builder.append("    public static final class Builder {\n" +
@@ -166,7 +157,8 @@ public class BundleParserProcessor extends AbstractProcessor {
                         .append("\n")
 
                         .append("            ")
-                        .append(buildPutDoc(info.fieldType,"\""+info.fieldName+"\"",info.fieldName))
+                        .append(buildPutDoc(info.fieldType, "\"" + info.fieldName + "\""
+                                , info.fieldName,className,info.fieldTypeName))
 
                         .append("\n")
                         .append("            return this;\n" +
@@ -176,40 +168,38 @@ public class BundleParserProcessor extends AbstractProcessor {
             }
 
 
-
-
             builder.append("        public Bundle bundle() {\n" +
                     "            return args;\n" +
                     "        }\n" +
                     "\n" +
-                    "    }").append("\n");
+                    "    }").append("\n").append("\n");
 
 
             /*********************** bind-fun **********************/
 
-            for (BundleInfo info : bundleInfos) {
-                builder.append("    public static void bind(").append(className).append(" target) {\n" +
-                        "        Intent intent = target.getIntent();\n" +
-                        "        if (intent==null)return;\n" +
-                        "        Bundle source = intent.getExtras();\n" +
-                        "        if (source==null)return;\n")
 
-                        .append("       if (source.containsKey(\"").append(info.fieldName).append("\")) {\n" +
-                                "            target.").append(info.fieldName)
+            builder.append("    public static void bind(").append(className).append(" target) {\n" +
+                    "        Intent intent = target.getIntent();\n" +
+                    "        if (intent==null)return;\n" +
+                    "        Bundle source = intent.getExtras();\n" +
+                    "        if (source==null)return;\n");
+            for (BundleInfo info : bundleInfos) {
+                builder.append("        if (source.containsKey(\"").append(info.fieldName).append("\")) {\n" +
+                        "            target.").append(info.fieldName)
                         .append(" = (").append(info.fieldTypeName)
-                        .append(buildGetDoc(info.fieldType,info.fieldName))
+                        .append(buildGetDoc(info.fieldType, info.fieldName,className,info.fieldTypeName))
 
                         .append("\n" +
                                 "        } else {\n" +
                                 "            throw new IllegalStateException(\"").append(info.fieldName)
                         .append(" is required, but not found in the bundle.\");\n" +
-                                "        }");
-                builder.append("\n" +
-                        "    }");
+                                "        }")
+                        .append("\n");
+
             }
 
-
-
+            builder.append("\n" +
+                    "    }");
 
 
             builder.append("}");
@@ -217,7 +207,7 @@ public class BundleParserProcessor extends AbstractProcessor {
 
             try {
                 JavaFileObject source = filer.createSourceFile(Constants.PACKAGE_NAME
-                        + "." + className+"Bundle");
+                        + "." + className + "Bundle");
                 Writer writer = source.openWriter();
                 writer.write(builder.toString());
                 writer.flush();
@@ -241,7 +231,7 @@ public class BundleParserProcessor extends AbstractProcessor {
         return SourceVersion.latestSupported();
     }
 
-    private String buildGetDoc(int type, String originalValue){
+    private String buildGetDoc(int type, String originalValue,String className,String typeName) {
         String doc = "";
         switch (TypeUtils.TypeKind.values()[type]) {
             case BOOLEAN:
@@ -277,52 +267,69 @@ public class BundleParserProcessor extends AbstractProcessor {
             case PARCELABLE:
                 doc = ") source.getParcelable(" + "\"" + originalValue + "\");";
                 break;
+            case StringArrayList:
+                doc = ") source.getStringArrayList(" + "\"" + originalValue + "\");";
+                break;
+            case IntegerArrayList:
+                doc = ") source.getIntegerArrayList(" + "\"" + originalValue + "\");";
+                break;
+            default:
+                logger.error("buildPutDoc - the @Args field \""+originalValue+"\" in "+className+" Bundle类型不支持: "+typeName);
+                break;
         }
 
         return doc;
     }
 
-    private String buildPutDoc(int type, String originalKey, String originalValue){
+    private String buildPutDoc(int type, String originalKey, String originalValue,String className,String typeName) {
         String doc = "";
         switch (TypeUtils.TypeKind.values()[type]) {
             case BOOLEAN:
-                doc = "args.putBoolean(" + originalKey+ "," + originalValue +");";
+                doc = "args.putBoolean(" + originalKey + "," + originalValue + ");";
                 break;
             case BYTE:
-                doc = "args.putByte("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putByte(" + originalKey + "," + originalValue + ");";
                 break;
             case SHORT:
-                doc = "args.putShort("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putShort(" + originalKey + "," + originalValue + ");";
                 break;
             case INT:
-                doc = "args.putInt("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putInt(" + originalKey + "," + originalValue + ");";
                 break;
             case LONG:
-                doc = "args.putLong("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putLong(" + originalKey + "," + originalValue + ");";
                 break;
             case CHAR:
-                doc = "args.putChar("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putChar(" + originalKey + "," + originalValue + ");";
                 break;
             case FLOAT:
-                doc = "args.putFloat("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putFloat(" + originalKey + "," + originalValue + ");";
                 break;
             case DOUBLE:
-                doc = "args.putDouble("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putDouble(" + originalKey + "," + originalValue + ");";
                 break;
             case STRING:
-                doc = "args.putString("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putString(" + originalKey + "," + originalValue + ");";
                 break;
             case SERIALIZABLE:
-                doc = "args.putSerializable("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putSerializable(" + originalKey + "," + originalValue + ");";
                 break;
             case PARCELABLE:
-                doc = "args.putParcelable("+ originalKey+ "," + originalValue + ");";
+                doc = "args.putParcelable(" + originalKey + "," + originalValue + ");";
+                break;
+            case StringArrayList:
+                doc = "args.putStringArrayList(" + originalKey + "," + originalValue + ");";
+                break;
+            case IntegerArrayList:
+                doc = "args.putIntegerArrayList(" + originalKey + "," + originalValue + ");";
+                break;
+            default:
+                logger.error("buildPutDoc - the @Args field \""+originalValue+"\" in "+className+" Bundle类型不支持: "+typeName);
                 break;
         }
 
         return doc;
     }
-
 
 
 }

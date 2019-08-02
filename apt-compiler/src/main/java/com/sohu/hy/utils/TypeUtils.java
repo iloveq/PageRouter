@@ -14,11 +14,13 @@ public class TypeUtils {
     private Types types;
     private TypeMirror parcelableType;
     private TypeMirror serializableType;
+    private TypeMirror listType;
 
     public TypeUtils(Types types, Elements elements) {
         this.types = types;
         parcelableType = elements.getTypeElement(PARCELABLE).asType();
         serializableType = elements.getTypeElement(SERIALIZABLE).asType();
+        listType = elements.getTypeElement(LIST).asType();
     }
 
     public String getTypeImportName(Element element) {
@@ -33,6 +35,7 @@ public class TypeUtils {
             case BOOLEAN:
             case CHAR:
             case STRING:
+            case LIST:
                 return typeMirror.toString();
             default:
                 // Other side, maybe the PARCELABLE or SERIALIZABLE or OBJECT.
@@ -54,37 +57,8 @@ public class TypeUtils {
         if (typeMirror.getKind().isPrimitive()) {
             return element.asType().getKind().name().toLowerCase();
         }
-        switch (typeMirror.toString()) {
-            case BYTE:
-                return "Byte";
-            case SHORT:
-                return "Short";
-            case INTEGER:
-                return "Integer";
-            case LONG:
-                return "Long";
-            case FLOAT:
-                return "Float";
-            case DOUBEL:
-                return "Double";
-            case BOOLEAN:
-                return "Boolean";
-            case CHAR:
-                return "Char";
-            case STRING:
-                return "String";
-            default:
-                // Other side, maybe the PARCELABLE or SERIALIZABLE or OBJECT.
-                if (types.isSubtype(typeMirror, parcelableType)) {
-                    // PARCELABLE
-                    return "Parcelable";
-                } else if (types.isSubtype(typeMirror, serializableType)) {
-                    // SERIALIZABLE
-                    return "Serializable";
-                } else {
-                    return "";
-                }
-        }
+        return typeMirror.toString();
+
     }
 
     public int typeExchange(Element element) {
@@ -112,6 +86,10 @@ public class TypeUtils {
                 return TypeKind.CHAR.ordinal();
             case STRING:
                 return TypeKind.STRING.ordinal();
+            case StringArrayList:
+                return TypeKind.StringArrayList.ordinal();
+            case IntegerArrayList:
+                return TypeKind.IntegerArrayList.ordinal();
             default:
                 // Other side, maybe the PARCELABLE or SERIALIZABLE or OBJECT.
                 if (types.isSubtype(typeMirror, parcelableType)) {
@@ -120,7 +98,7 @@ public class TypeUtils {
                 } else if (types.isSubtype(typeMirror, serializableType)) {
                     // SERIALIZABLE
                     return TypeKind.SERIALIZABLE.ordinal();
-                } else {
+                }  {
                     return TypeKind.OBJECT.ordinal();
                 }
         }
@@ -141,6 +119,8 @@ public class TypeUtils {
         STRING,
         SERIALIZABLE,
         PARCELABLE,
-        OBJECT;
+        OBJECT,
+        StringArrayList,
+        IntegerArrayList
     }
 }

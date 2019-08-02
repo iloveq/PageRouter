@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         PageRouter
             .of(this)
             .path("test")
-            .setParams(new TestActivityBundle.Builder().setMsg("ssss").bundle())
+            .setParams(new TestActivityBundle.Builder().setMsg("ssss").setADouble(1).bundle())
             .setUri(Uri.parse(""))
             .navigation();
     }
