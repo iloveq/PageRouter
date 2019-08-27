@@ -93,18 +93,19 @@ public class BundleParserProcessor extends AbstractProcessor {
             String classPath = packageElement.getQualifiedName().toString() + "." + className;
 
             List<Element> fields = entry.getValue();
-            List<BundleInfo> bundleInfos = new ArrayList<>();
+            List<BundleInfo> infoList = new ArrayList<>();
 
             for (Element element : fields) {
                 Args fieldConfig = element.getAnnotation(Args.class);
                 String fieldName = element.getSimpleName().toString();
                 BundleInfo info = new BundleInfo();
                 info.fieldName = fieldName;
+                info.isThrowError = fieldConfig.required();
                 info.fieldTypeName = typeUtils.getTypeName(element);
                 info.fieldMethodName = "set" + StringUtils.toUpperCaseFirstOne(fieldName);
                 info.fieldType = typeUtils.typeExchange(element);
                 info.fieldImportName = typeUtils.getTypeImportName(element);
-                bundleInfos.add(info);
+                infoList.add(info);
             }
 
             StringBuilder builder = new StringBuilder();
@@ -122,6 +123,12 @@ public class BundleParserProcessor extends AbstractProcessor {
             builder.append("\n");
 
             builder.append("import android.os.Bundle;");
+            builder.append("\n");
+            builder.append("import android.net.Uri;");
+            builder.append("\n");
+            builder.append("import android.app.Activity;");
+            builder.append("\n");
+            builder.append("import android.content.Context;");
             builder.append("\n");
             builder.append("import android.content.Intent;");
             builder.append("\n");
@@ -143,13 +150,13 @@ public class BundleParserProcessor extends AbstractProcessor {
             builder.append("    public static final class Builder {\n" +
                     "\n" +
                     "        private final Bundle args;\n" +
-                    "        \n" +
+                    "        private Uri uri;\n" +
                     "        public Builder() {\n" +
                     "            this.args = new Bundle();\n" +
                     "        }\n").append("\n");
 
 
-            for (BundleInfo info : bundleInfos) {
+            for (BundleInfo info : infoList) {
 
                 builder.append("        public ").append(className).append("Bundle.Builder ")
                         .append(info.fieldMethodName)
@@ -167,6 +174,48 @@ public class BundleParserProcessor extends AbstractProcessor {
                 ;
             }
 
+            builder.append("        public ").append(className).append("Bundle.Builder withUri(Uri uri){\n" +
+                    "            this.uri = uri;\n" +
+                    "            return this;\n" +
+                    "        }");
+
+            builder.append("\n");
+            builder.append("\n");
+
+            builder.append("        public void lunch(Context ctx) {\n" +
+                    "            if (ctx==null)return;\n" +
+                    "            Intent intent = new Intent(ctx,").append(className).append(".class);\n" +
+                    "            if (!(ctx instanceof Activity)) {\n" +
+                    "                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);\n" +
+                    "            }\n" +
+                    "            if (uri!=null){\n" +
+                    "                intent.setData(uri);\n" +
+                    "            }\n" +
+                    "            if(args!=null){\n" +
+                    "                intent.putExtras(args);\n" +
+                    "            }\n" +
+                    "            ctx.startActivity(intent);\n" +
+                    "        }");
+
+            builder.append("\n");
+
+            builder.append("        public void lunch(Context ctx,Class clazz) {\n" +
+                    "            if (ctx==null)return;\n" +
+                    "            Intent intent = new Intent(ctx,clazz);\n" +
+                    "            if (!(ctx instanceof Activity)) {\n" +
+                    "                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);\n" +
+                    "            }\n" +
+                    "            if (uri!=null){\n" +
+                    "                intent.setData(uri);\n" +
+                    "            }\n" +
+                    "            if(args!=null){\n" +
+                    "                intent.putExtras(args);\n" +
+                    "            }\n" +
+                    "            ctx.startActivity(intent);\n" +
+                    "        }");
+
+            builder.append("\n");
+
 
             builder.append("        public Bundle bundle() {\n" +
                     "            return args;\n" +
@@ -183,18 +232,31 @@ public class BundleParserProcessor extends AbstractProcessor {
                     "        if (intent==null)return;\n" +
                     "        Bundle source = intent.getExtras();\n" +
                     "        if (source==null)return;\n");
-            for (BundleInfo info : bundleInfos) {
-                builder.append("        if (source.containsKey(\"").append(info.fieldName).append("\")) {\n" +
-                        "            target.").append(info.fieldName)
-                        .append(" = (").append(info.fieldTypeName)
-                        .append(buildGetDoc(info.fieldType, info.fieldName,className,info.fieldTypeName))
+            for (BundleInfo info : infoList) {
 
-                        .append("\n" +
-                                "        } else {\n" +
-                                "            throw new IllegalStateException(\"").append(info.fieldName)
-                        .append(" is required, but not found in the bundle.\");\n" +
-                                "        }")
-                        .append("\n");
+                if(info.isThrowError){
+                    builder.append("        if (source.containsKey(\"").append(info.fieldName).append("\")) {\n" +
+                            "            target.").append(info.fieldName)
+                            .append(" = (").append(info.fieldTypeName)
+                            .append(buildGetDoc(info.fieldType, info.fieldName,className,info.fieldTypeName))
+
+                            .append("\n" +
+                                    "        } else {\n" +
+                                    "            throw new IllegalStateException(\"").append(info.fieldName)
+                            .append(" is required, but not found in the bundle.\");\n" +
+                                    "        }")
+                            .append("\n");
+                }else {
+                    builder.append("        if (source.containsKey(\"").append(info.fieldName).append("\")) {\n" +
+                            "            target.").append(info.fieldName)
+                            .append(" = (").append(info.fieldTypeName)
+                            .append(buildGetDoc(info.fieldType, info.fieldName,className,info.fieldTypeName))
+
+                            .append("\n" +
+                                    "        }")
+                            .append("\n");
+                }
+
 
             }
 

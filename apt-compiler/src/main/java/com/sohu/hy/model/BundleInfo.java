@@ -7,5 +7,6 @@ public class BundleInfo {
     public String fieldName;
     public String fieldImportName;
     public String fieldMethodName;
+    public boolean isThrowError;
 
 }
