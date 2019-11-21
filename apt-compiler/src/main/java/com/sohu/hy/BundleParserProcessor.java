@@ -151,13 +151,34 @@ public class BundleParserProcessor extends AbstractProcessor {
                     "\n" +
                     "        private final Bundle args;\n" +
                     "        private Uri uri;\n" +
-                    "        public Builder() {\n" +
-                    "            this.args = new Bundle();\n" +
-                    "        }\n").append("\n");
+                    "        public Builder(");
+
+            StringBuilder paramsBuilder  = new StringBuilder();
+            for (BundleInfo info : infoList) {
+                if (info.isThrowError){
+                    paramsBuilder.append(info.fieldTypeName).append(" ").append(info.fieldName).append(",");
+                }
+            }
+            String params = paramsBuilder.toString();
+            if (!params.isEmpty()){
+                params = params.substring(0,params.length() - 1);
+                builder.append(params);
+            }
+
+
+            builder.append(") {\n" +
+                    "            this.args = new Bundle();\n");
+            for (BundleInfo info : infoList) {
+                if(info.isThrowError){
+                    builder.append("            ").append(buildPutDoc(info.fieldType, "\"" + info.fieldName + "\""
+                            , info.fieldName,className,info.fieldTypeName)).append("\n");
+                }
+            }
+            builder.append("        }\n").append("\n");
 
 
             for (BundleInfo info : infoList) {
-
+                if (info.isThrowError)continue;
                 builder.append("        public ").append(className).append("Bundle.Builder ")
                         .append(info.fieldMethodName)
                         .append("(").append(info.fieldTypeName).append(" ").append(info.fieldName).append("){")

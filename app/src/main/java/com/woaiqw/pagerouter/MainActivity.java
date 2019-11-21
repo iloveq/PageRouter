@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             PageRouter
                     .of(this)
                     .path(Constants.RouterPath.TEST1)
-                    .setParams(new Test1ActivityBundle.Builder()
+                    .setParams(new Test1ActivityBundle.Builder("Welcome2Test1Activity")
                             .setName('z')
                             .setMoney(50000)
                             .setBeanS(new SerializableBean("SerializableBean"))
@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .setStringArrayList(as)
                             .setIntegerArrayList(ai)
                             .setBm(bm)
-                            .setMsg("Welcome2Test1Activity")
                             .bundle())
                     .setUri(Uri.parse(""))
                     .navigation();

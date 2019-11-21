@@ -24,7 +24,7 @@ import java.util.ArrayList;
 @Route(path = Constants.RouterPath.TEST1)
 public class Test1Activity extends AppCompatActivity {
 
-    @Args
+    @Args(required = true)
     public String msg;
 
     @Args
