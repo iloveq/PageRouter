@@ -27,7 +27,7 @@ public class BundleService {
             String className = targetClass.getSimpleName();
             if (className.isEmpty()) return false;
             if (className.equals("AppCompatActivity")) return false;
-            String bundlePath = "com.sohu.generate." + className + "Launcher";
+            String bundlePath = "com.sohu.generate." + className + "Bundle";
             Class<?> c;
             try {
                 c = Class.forName(bundlePath);
